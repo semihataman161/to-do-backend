@@ -1,30 +1,31 @@
-const pool = require('../db');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../db');
 
-class UserRepository {
-  async createUser(user) {
-    const { userName, password } = user;
-    const query = 'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *';
-    const values = [userName, password];
-
-    try {
-      const result = await pool.query(query, values);
-      return result.rows[0];
-    } catch (error) {
-      throw error;
-    }
+const User = sequelize.define('User', {
+  user_id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  username: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false
   }
+}, {
+  tableName: 'users',
+  timestamps: false
+});
 
-  async getUserByUserName(userName) {
-    const query = 'SELECT * FROM users WHERE userName = $1';
-    const values = [userName];
+const createUser = async ({ username, password }) => {
+  return await User.create({ username, password });
+};
 
-    try {
-      const result = await pool.query(query, values);
-      return result.rows[0];
-    } catch (error) {
-      throw error;
-    }
-  }
-}
+const getUserByUsername = async (username) => {
+  return await User.findOne({ where: { username } });
+};
 
-module.exports = new UserRepository();
+module.exports = { createUser, getUserByUsername };

@@ -25,7 +25,12 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-async-handler": "^1.2.0",
+    "joi": "^17.12.2",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.5",
+    "pg-hstore": "^2.3.4",
+    "postgre": "^0.1.8",
+    "sequelize": "^6.37.2",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^4.6.3"
   },

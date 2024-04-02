@@ -1,55 +1,35 @@
-const UserRepository = require('./user.repository');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const UserRepository = require('./user.repository');
 const customErrors = require('../custom.errors');
-const User = require('./user.entity');
 
 const SALT_ROUNDS = 10;
 
-const createUser = async (request) => {
-  const { userName, password } = request;
-  const user = new User(userName, password);
+const createUser = async ({ username, password }) => {
+  const user = await UserRepository.getUserByUsername(username);
 
-  try {
-    // Check if user exists
-    const existingUser = await UserRepository.getUserByUserName(userName);
-    if (existingUser) {
-      throw new customErrors.ToDoAppError(`User with user name ${userName} already exists!`, { statusCode: 409 });
-    }
-
-    // If the user does not exist, hash the password and create the user
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-    user.password = hashedPassword;
-    const newUser = await UserRepository.createUser(user);
-    return newUser;
-  } catch (error) {
-    throw error;
+  if (user) {
+    throw new customErrors.ToDoAppError(`User with username: ${username} already exists!`, { statusCode: 409 });
   }
-}
 
-const login = async (request) => {
-  const { userName, password } = request;
+  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+  return await UserRepository.createUser({ username, password: hashedPassword });
+};
 
-  try {
-    // Check if user exists
-    const user = await UserRepository.getUserByUserName(userName);
-    if (!user) {
-      throw new customErrors.ToDoAppError(`Invalid credentials!`, { statusCode: 401 });
-    }
+const login = async (username, password) => {
+  const user = await UserRepository.getUserByUsername(username);
 
-    // Check if password is correct
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      throw new customErrors.ToDoAppError(`Invalid credentials!`, { statusCode: 401 });
-    }
-
-    // Return user details if login is successful
-    return {
-      _id: user.id,
-      userName: user.username,
-    };
-  } catch (error) {
-    throw error;
+  if (!user) {
+    throw new customErrors.ToDoAppError('Invalid credentials!', { statusCode: 401 });
   }
-}
+
+  const match = await bcrypt.compare(password, user.password);
+  if (!match) {
+    throw new customErrors.ToDoAppError('Invalid credentials!', { statusCode: 401 });
+  }
+
+  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+  return token;
+};
 
 module.exports = { createUser, login };

@@ -4,6 +4,7 @@ const cors = require('cors');
 const userRoute = require('../user/user.route');
 const errorMiddleware = require('../middleware/errorMiddleware');
 const swaggerJsdoc = require("swagger-jsdoc");
+const { testConnection } = require('../db');
 require('dotenv').config();
 require('babel-register');
 
@@ -59,8 +60,14 @@ app.use(
 
 
 app.use('/api/user', userRoute)
-app.use('/api/healthCheck', (req, res) => {
-  res.status(200).json({ message: 'Server is running!' });
+app.use('/api/healthCheck', async (req, res) => {
+  try {
+    await testConnection();
+    res.status(200).json({ message: 'Server is running and database connection is healthy!' });
+  } catch (error) {
+    console.error('Failed to establish database connection:', error);
+    res.status(500).json({ error: 'Database connection is not healthy' });
+  }
 });
 app.use('*', (request, response) => {
   response.status(404).json({ message: 'Route not found!' });
