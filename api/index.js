@@ -2,6 +2,7 @@ const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const cors = require('cors');
 const userRoute = require('../user/user.route');
+const todoRoute = require('../todo/todo.route');
 const errorMiddleware = require('../middleware/errorMiddleware');
 const swaggerJsdoc = require("swagger-jsdoc");
 const { testConnection } = require('../db');
@@ -27,8 +28,7 @@ const options = {
     info: {
       title: "to-do-app",
       version: "1.0.0",
-      description:
-        "Express.js and PostgreSQL Backend API",
+      description: "Express.js and PostgreSQL Backend API",
       license: {
         name: "MIT",
         url: "https://spdx.org/licenses/MIT.html",
@@ -43,8 +43,17 @@ const options = {
         url: '/',
       },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
   },
-  apis: ["./user/*.js"],
+  apis: ["./user/*.js", "./todo/*.js"]
 };
 
 const specs = swaggerJsdoc(options);
@@ -60,6 +69,7 @@ app.use(
 
 
 app.use('/api/user', userRoute)
+app.use('/api/todo', todoRoute)
 app.use('/api/healthCheck', async (req, res) => {
   try {
     await testConnection();
