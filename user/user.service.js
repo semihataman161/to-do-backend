@@ -28,7 +28,7 @@ const login = async (username, password) => {
     throw new customErrors.ToDoAppError('Invalid credentials!', { statusCode: 401 });
   }
 
-  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+  const token = jwt.sign({ userId: user['user_id'] }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
   return token;
 };
 
